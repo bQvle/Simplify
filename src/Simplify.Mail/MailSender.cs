@@ -141,20 +141,21 @@ namespace Simplify.Mail
 			Send(SmtpClient, mailMessage, bodyForAntiSpam);
 		}
 
-		/// <summary>
-		/// Send single e-mail
-		/// </summary>
-		/// <param name="client">Smtp client</param>
-		/// <param name="from">From mail address</param>
-		/// <param name="to">Recipient e-mail address</param>
-		/// <param name="subject">e-mail subject</param>
-		/// <param name="body">e-mail body</param>
-		/// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
-		/// <param name="attachments">The attachments to an e-mail.</param>
-		/// <returns>
-		/// Process status, <see langword="true" /> if message is processed to sent successfully
-		/// </returns>
-		public void Send(SmtpClient client, string from, string to, string subject, string body, string bodyForAntiSpam = null, params Attachment[] attachments)
+        /// <summary>
+        /// Send single e-mail
+        /// </summary>
+        /// <param name="client">Smtp client</param>
+        /// <param name="from">From mail address</param>
+        /// <param name="to">Recipient e-mail address</param>
+        /// <param name="subject">e-mail subject</param>
+        /// <param name="body">e-mail body</param>
+        /// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
+        /// <param name="customHeaders">add custom headers to an e-mail.</param>
+        /// <param name="attachments">The attachments to an e-mail.</param>
+        /// <returns>
+        /// Process status, <see langword="true" /> if message is processed to sent successfully
+        /// </returns>
+        public void Send(SmtpClient client, string from, string to, string subject, string body, string bodyForAntiSpam = null, IDictionary<string, string> customHeaders = null, params Attachment[] attachments)
 		{
 			lock (_locker)
 			{
@@ -168,7 +169,11 @@ namespace Simplify.Mail
 						DeliveryNotificationOptions = DeliveryNotificationOptions.OnFailure,
 					};
 
-				if (attachments != null)
+                if (customHeaders != null)
+                    foreach (var header in customHeaders)
+                        mm.Headers.Add(header.Key, header.Value);
+
+                if (attachments != null)
 					foreach (var attachment in attachments)
 						mm.Attachments.Add(attachment);
 
@@ -176,33 +181,35 @@ namespace Simplify.Mail
 			}
 		}
 
-		/// <summary>
-		/// Send single e-mail
-		/// </summary>
-		/// <param name="from">From mail address</param>
-		/// <param name="to">Recipient e-mail address</param>
-		/// <param name="subject">e-mail subject</param>
-		/// <param name="body">e-mail body</param>
-		/// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
-		/// <param name="attachments">The attachments to an e-mail.</param>
-		/// <returns>Process status, <see langword="true"/> if message is processed to sent successfully</returns>
-		public void Send(string from, string to, string subject, string body, string bodyForAntiSpam = null, params Attachment[] attachments)
+        /// <summary>
+        /// Send single e-mail
+        /// </summary>
+        /// <param name="from">From mail address</param>
+        /// <param name="to">Recipient e-mail address</param>
+        /// <param name="subject">e-mail subject</param>
+        /// <param name="body">e-mail body</param>
+        /// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
+        /// <param name="customHeaders">add custom headers to an e-mail.</param>
+        /// <param name="attachments">The attachments to an e-mail.</param>
+        /// <returns>Process status, <see langword="true"/> if message is processed to sent successfully</returns>
+        public void Send(string from, string to, string subject, string body, string bodyForAntiSpam = null, IDictionary<string, string> customHeaders = null, params Attachment[] attachments)
 		{
-			Send(SmtpClient, from, to, subject, body, bodyForAntiSpam, attachments);
+			Send(SmtpClient, from, to, subject, body, bodyForAntiSpam, customHeaders, attachments);
 		}
 
-		/// <summary>
-		/// Send e-mail to multiple recipients separately
-		/// </summary>
-		/// <param name="client">Smtp client</param>
-		/// <param name="fromMailAddress">From mail address</param>
-		/// <param name="addresses">Recipients</param>
-		/// <param name="subject">e-mail subject</param>
-		/// <param name="body">e-mail body</param>
-		/// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
-		/// <param name="attachments">The attachments to an e-mail.</param>
-		/// <returns>Process status, <see langword="true"/> if all messages are processed to sent successfully</returns>
-		public void SendSeparately(SmtpClient client, string fromMailAddress, IList<string> addresses, string subject, string body, string bodyForAntiSpam = null, params Attachment[] attachments)
+        /// <summary>
+        /// Send e-mail to multiple recipients separately
+        /// </summary>
+        /// <param name="client">Smtp client</param>
+        /// <param name="fromMailAddress">From mail address</param>
+        /// <param name="addresses">Recipients</param>
+        /// <param name="subject">e-mail subject</param>
+        /// <param name="body">e-mail body</param>
+        /// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
+        /// <param name="customHeaders">add custom headers to an e-mail.</param>
+        /// <param name="attachments">The attachments to an e-mail.</param>
+        /// <returns>Process status, <see langword="true"/> if all messages are processed to sent successfully</returns>
+        public void SendSeparately(SmtpClient client, string fromMailAddress, IList<string> addresses, string subject, string body, string bodyForAntiSpam = null, IDictionary<string, string> customHeaders = null, params Attachment[] attachments)
 		{
 			if (addresses.Count == 0)
 				return;
@@ -221,6 +228,10 @@ namespace Simplify.Mail
 							DeliveryNotificationOptions = DeliveryNotificationOptions.OnFailure
 						};
 
+                    if (customHeaders != null) 
+                        foreach (var header in customHeaders)
+                            mm.Headers.Add(header.Key, header.Value);
+                    
 					if (attachments != null)
 						foreach (var attachment in attachments)
 							mm.Attachments.Add(attachment);
@@ -230,33 +241,35 @@ namespace Simplify.Mail
 			}
 		}
 
-		/// <summary>
-		/// Send e-mail to multiple recipients separately
-		/// </summary>
-		/// <param name="fromMailAddress">From mail address</param>
-		/// <param name="addresses">Recipients</param>
-		/// <param name="subject">e-mail subject</param>
-		/// <param name="body">e-mail body</param>
-		/// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
-		/// <param name="attachments">The attachments to an e-mail.</param>
-		/// <returns>Process status, <see langword="true"/> if all messages are processed to sent successfully</returns>
-		public void SendSeparately(string fromMailAddress, IList<string> addresses, string subject, string body, string bodyForAntiSpam = null, params Attachment[] attachments)
+        /// <summary>
+        /// Send e-mail to multiple recipients separately
+        /// </summary>
+        /// <param name="fromMailAddress">From mail address</param>
+        /// <param name="addresses">Recipients</param>
+        /// <param name="subject">e-mail subject</param>
+        /// <param name="body">e-mail body</param>
+        /// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
+        /// <param name="customHeaders">add custom headers to an e-mail.</param>
+        /// <param name="attachments">The attachments to an e-mail.</param>
+        /// <returns>Process status, <see langword="true"/> if all messages are processed to sent successfully</returns>
+        public void SendSeparately(string fromMailAddress, IList<string> addresses, string subject, string body, string bodyForAntiSpam = null, IDictionary<string, string> customHeaders = null, params Attachment[] attachments)
 		{
-			SendSeparately(SmtpClient, fromMailAddress, addresses, subject, body, bodyForAntiSpam, attachments);
+			SendSeparately(SmtpClient, fromMailAddress, addresses, subject, body, bodyForAntiSpam, customHeaders, attachments);
 		}
 
-		/// <summary>
-		/// Send e-mail to multiple recipients in one e-mail
-		/// </summary>
-		/// <param name="client">Smtp client</param>
-		/// <param name="fromMailAddress">From mail address</param>
-		/// <param name="addresses">Recipients</param>
-		/// <param name="subject">e-mail subject</param>
-		/// <param name="body">e-mail body</param>
-		/// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
-		/// <param name="attachments">The attachments to an e-mail.</param>
-		/// <returns>Process status, <see langword="true"/> if all messages are processed to sent successfully</returns>
-		public void Send(SmtpClient client, string fromMailAddress, IList<string> addresses, string subject, string body, string bodyForAntiSpam = null, params Attachment[] attachments)
+        /// <summary>
+        /// Send e-mail to multiple recipients in one e-mail
+        /// </summary>
+        /// <param name="client">Smtp client</param>
+        /// <param name="fromMailAddress">From mail address</param>
+        /// <param name="addresses">Recipients</param>
+        /// <param name="subject">e-mail subject</param>
+        /// <param name="body">e-mail body</param>
+        /// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
+        /// <param name="customHeaders">add custom headers to an e-mail.</param>
+        /// <param name="attachments">The attachments to an e-mail.</param>
+        /// <returns>Process status, <see langword="true"/> if all messages are processed to sent successfully</returns>
+        public void Send(SmtpClient client, string fromMailAddress, IList<string> addresses, string subject, string body, string bodyForAntiSpam = null, IDictionary<string, string> customHeaders = null, params Attachment[] attachments)
 		{
 			if (addresses.Count == 0)
 				return;
@@ -280,7 +293,11 @@ namespace Simplify.Mail
 				foreach (var item in addresses)
 					mm.To.Add(item);
 
-				if (attachments != null)
+                if (customHeaders != null)
+                    foreach (var header in customHeaders)
+                        mm.Headers.Add(header.Key, header.Value);
+
+                if (attachments != null)
 					foreach (var attachment in attachments)
 						mm.Attachments.Add(attachment);
 
@@ -289,34 +306,36 @@ namespace Simplify.Mail
 			}
 		}
 
-		/// <summary>
-		/// Send e-mail to multiple recipients in one e-mail
-		/// </summary>
-		/// <param name="fromMailAddress">From mail address</param>
-		/// <param name="addresses">Recipients</param>
-		/// <param name="subject">e-mail subject</param>
-		/// <param name="body">e-mail body</param>
-		/// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
-		/// <param name="attachments">The attachments to an e-mail.</param>
-		/// <returns>Process status, <see langword="true"/> if all messages are processed to sent successfully</returns>
-		public void Send(string fromMailAddress, IList<string> addresses, string subject, string body, string bodyForAntiSpam = null, params Attachment[] attachments)
+        /// <summary>
+        /// Send e-mail to multiple recipients in one e-mail
+        /// </summary>
+        /// <param name="fromMailAddress">From mail address</param>
+        /// <param name="addresses">Recipients</param>
+        /// <param name="subject">e-mail subject</param>
+        /// <param name="body">e-mail body</param>
+        /// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
+        /// <param name="customHeaders">add custom headers to an e-mail.</param>
+        /// <param name="attachments">The attachments to an e-mail.</param>
+        /// <returns>Process status, <see langword="true"/> if all messages are processed to sent successfully</returns>
+        public void Send(string fromMailAddress, IList<string> addresses, string subject, string body, string bodyForAntiSpam = null, IDictionary<string, string> customHeaders = null, params Attachment[] attachments)
 		{
-			Send(SmtpClient, fromMailAddress, addresses, subject, body, bodyForAntiSpam, attachments);
+			Send(SmtpClient, fromMailAddress, addresses, subject, body, bodyForAntiSpam, customHeaders, attachments);
 		}
 
-		/// <summary>
-		/// Send e-mail to multiple recipients and carbon copy recipients in one e-mail
-		/// </summary>
-		/// <param name="client">Smtp client</param>
-		/// <param name="fromMailAddress">From mail address</param>
-		/// <param name="addresses">Recipients</param>
-		/// <param name="ccAddresses">Carbon copy recipients</param>
-		/// <param name="subject">e-mail subject</param>
-		/// <param name="body">e-mail body</param>
-		/// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
-		/// <param name="attachments">The attachments to an e-mail.</param>
-		/// <returns>Process status, <see langword="true"/> if all messages are processed to sent successfully</returns>
-		public void Send(SmtpClient client, string fromMailAddress, IList<string> addresses, IList<string> ccAddresses, string subject, string body, string bodyForAntiSpam = null, params Attachment[] attachments)
+        /// <summary>
+        /// Send e-mail to multiple recipients and carbon copy recipients in one e-mail
+        /// </summary>
+        /// <param name="client">Smtp client</param>
+        /// <param name="fromMailAddress">From mail address</param>
+        /// <param name="addresses">Recipients</param>
+        /// <param name="ccAddresses">Carbon copy recipients</param>
+        /// <param name="subject">e-mail subject</param>
+        /// <param name="body">e-mail body</param>
+        /// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
+        /// <param name="customHeaders">add custom headers to an e-mail.</param>
+        /// <param name="attachments">The attachments to an e-mail.</param>
+        /// <returns>Process status, <see langword="true"/> if all messages are processed to sent successfully</returns>
+        public void Send(SmtpClient client, string fromMailAddress, IList<string> addresses, IList<string> ccAddresses, string subject, string body, string bodyForAntiSpam = null, IDictionary<string, string> customHeaders = null, params Attachment[] attachments)
 		{
 			if (addresses.Count == 0)
 				return;
@@ -342,7 +361,11 @@ namespace Simplify.Mail
 				foreach (var item in ccAddresses)
 					mm.CC.Add(item);
 
-				if (attachments != null)
+                if (customHeaders != null)
+                    foreach (var header in customHeaders)
+                        mm.Headers.Add(header.Key, header.Value);
+
+                if (attachments != null)
 					foreach (var attachment in attachments)
 						mm.Attachments.Add(attachment);
 
@@ -350,21 +373,22 @@ namespace Simplify.Mail
 			}
 		}
 
-		/// <summary>
-		/// Send e-mail to multiple recipients and carbon copy recipients in one e-mail
-		/// </summary>
-		/// <param name="fromMailAddress">From mail address</param>
-		/// <param name="addresses">Recipients</param>
-		/// <param name="ccAddresses">Carbon copy recipients</param>
-		/// <param name="subject">e-mail subject</param>
-		/// <param name="body">e-mail body</param>
-		/// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
-		/// <param name="attachments">The attachments to an e-mail.</param>
-		/// <returns>Process status, <see langword="true"/> if all messages are processed to sent successfully</returns>
-		public void Send(string fromMailAddress, IList<string> addresses, IList<string> ccAddresses, string subject,
-			string body, string bodyForAntiSpam = null, params Attachment[] attachments)
+        /// <summary>
+        /// Send e-mail to multiple recipients and carbon copy recipients in one e-mail
+        /// </summary>
+        /// <param name="fromMailAddress">From mail address</param>
+        /// <param name="addresses">Recipients</param>
+        /// <param name="ccAddresses">Carbon copy recipients</param>
+        /// <param name="subject">e-mail subject</param>
+        /// <param name="body">e-mail body</param>
+        /// <param name="bodyForAntiSpam">Part of an e-mail body just for anti-spam checking</param>
+        /// <param name="customHeaders">add custom headers to an e-mail.</param>
+        /// <param name="attachments">The attachments to an e-mail.</param>
+        /// <returns>Process status, <see langword="true"/> if all messages are processed to sent successfully</returns>
+        public void Send(string fromMailAddress, IList<string> addresses, IList<string> ccAddresses, string subject,
+			string body, string bodyForAntiSpam = null, IDictionary<string, string> customHeaders = null, params Attachment[] attachments)
 		{
-			Send(SmtpClient, fromMailAddress, addresses, ccAddresses, subject, body, bodyForAntiSpam, attachments);
+			Send(SmtpClient, fromMailAddress, addresses, ccAddresses, subject, body, bodyForAntiSpam, customHeaders, attachments);
 		}
 
 		private bool CheckAntiSpamPool(string messageBody)
